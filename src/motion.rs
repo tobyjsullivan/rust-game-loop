@@ -1,4 +1,4 @@
 pub struct Motion {
-    pub accX: i32,
-    pub accY: i32
+    pub acc_x: i32,
+    pub acc_y: i32
 }

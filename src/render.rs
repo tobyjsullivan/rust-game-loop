@@ -4,7 +4,7 @@ use entity::Entity;
 use sprite::Sprite;
 use transform::Transform;
 
-pub fn render(sprites: &HashMap<&Entity, &Sprite>, transforms: &HashMap<&Entity, &Transform>) {
+pub fn render(sprites: &HashMap<Entity, Sprite>, transforms: &HashMap<Entity, Transform>) {
     for entity in sprites.keys() {
         match (sprites.get(&entity), transforms.get(&entity)) {
             (Some(s), Some(t)) => {
@@ -12,6 +12,6 @@ pub fn render(sprites: &HashMap<&Entity, &Sprite>, transforms: &HashMap<&Entity,
             },
             (_, _) => ()
         };
-        
+
     }
 }
