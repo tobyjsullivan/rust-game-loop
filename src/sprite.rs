@@ -1,4 +1,9 @@
+extern crate sdl2;
 
-pub struct Sprite<'a> {
-    pub img: &'a str
+use sdl2::pixels::Color;
+
+pub struct Sprite {
+    pub width: u32,
+    pub height: u32,
+    pub color: Color
 }
