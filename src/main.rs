@@ -42,9 +42,9 @@ fn main() {
     };
 
     let mut motions = hashmap!{
-        entity::Entity{ .. e1 } => motion::Motion{acc_x: 0.1, acc_y: 0.1},
-        entity::Entity{ .. e2 } => motion::Motion{acc_x: 0.0, acc_y: 0.0},
-        entity::Entity{ .. e3 } => motion::Motion{acc_x: 0.0, acc_y: 0.0}
+        entity::Entity{ .. e1 } => motion::Motion{velo_x: 1, velo_y: 1, next_move: 0, move_rate: 100},
+        entity::Entity{ .. e2 } => motion::Motion{velo_x: 0, velo_y: 0, next_move: 0, move_rate: 100},
+        entity::Entity{ .. e3 } => motion::Motion{velo_x: 0, velo_y: 0, next_move: 0, move_rate: 100}
     };
 
     let mut last_tick = Instant::now();
@@ -60,7 +60,9 @@ fn main() {
             }
         }
 
-        transforms = movement::movement(ticks, transforms, &motions);
+        let (t, m) = movement::movement(ticks, transforms, motions);
+        transforms = t;
+        motions = m;
         render.render(ticks, &sprites, &transforms);
     }
 }

@@ -1,4 +1,9 @@
+use im::shared::Shared;
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Motion {
-    pub acc_x: f32,
-    pub acc_y: f32
+    pub velo_x: i32,
+    pub velo_y: i32,
+    pub next_move: i32,
+    pub move_rate: i32
 }

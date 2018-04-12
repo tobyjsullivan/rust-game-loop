@@ -1,8 +1,5 @@
 
-#[derive(Debug)]
-#[derive(PartialEq)]
-#[derive(Eq)]
-#[derive(Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Entity {
     pub id: i32
 }
