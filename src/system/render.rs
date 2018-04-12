@@ -1,14 +1,14 @@
 extern crate sdl2;
 
 use im::HashMap;
-use render::sdl2::render::Canvas;
-use render::sdl2::video::Window;
-use render::sdl2::pixels::Color;
-use render::sdl2::rect::Rect;
+use sdl2::render::Canvas;
+use sdl2::video::Window;
+use sdl2::pixels::Color;
+use sdl2::rect::Rect;
 
 use entity::Entity;
-use sprite::Sprite;
-use transform::Transform;
+use component::Sprite;
+use component::Transform;
 
 pub struct Render {
     canvas: Canvas<Window>

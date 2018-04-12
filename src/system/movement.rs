@@ -1,7 +1,7 @@
 use im::HashMap;
 use entity::Entity;
-use transform::Transform;
-use motion::Motion;
+use component::Transform;
+use component::Motion;
 use std::sync::Arc;
 use std::ops::Deref;
 
