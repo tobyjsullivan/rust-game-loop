@@ -36,15 +36,15 @@ fn main() {
     };
 
     let mut transforms = hashmap!{
-        entity::Entity{ .. e1 } => transform::Transform{x: 3, y: 12},
-        entity::Entity{ .. e2 } => transform::Transform{x: 5, y: 2},
-        entity::Entity{ .. e3 } => transform::Transform{x: 16, y: 8}
+        entity::Entity{ .. e1 } => transform::Transform{x: 3.0, y: 12.0},
+        entity::Entity{ .. e2 } => transform::Transform{x: 5.0, y: 2.0},
+        entity::Entity{ .. e3 } => transform::Transform{x: 16.0, y: 8.0}
     };
 
     let mut motions = hashmap!{
-        entity::Entity{ .. e1 } => motion::Motion{velo_x: 1, velo_y: 1, next_move: 0, move_rate: 100},
-        entity::Entity{ .. e2 } => motion::Motion{velo_x: 0, velo_y: 0, next_move: 0, move_rate: 100},
-        entity::Entity{ .. e3 } => motion::Motion{velo_x: 0, velo_y: 0, next_move: 0, move_rate: 100}
+        entity::Entity{ .. e1 } => motion::Motion{velo_x: 100.0, velo_y: 100.0},
+        entity::Entity{ .. e2 } => motion::Motion{velo_x: 0.0, velo_y: 0.0},
+        entity::Entity{ .. e3 } => motion::Motion{velo_x: 0.0, velo_y: 0.0}
     };
 
     let mut last_tick = Instant::now();

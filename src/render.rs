@@ -38,7 +38,7 @@ impl Render {
             match (sprites.get(&entity), transforms.get(&entity)) {
                 (Some(s), Some(t)) => {
                     println!("Rendering: {} at {}x{}", entity.id, t.x, t.y);
-                    let rect = Rect::new(t.x, t.y, s.width, s.height);
+                    let rect = Rect::new(t.x as i32, t.y as i32, s.width, s.height);
                     self.canvas.set_draw_color(s.color);
                     self.canvas.draw_rect(rect).unwrap();
                 },

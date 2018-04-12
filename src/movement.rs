@@ -25,16 +25,13 @@ fn apply_movement(ticks: u32, transform: Option<Arc<Transform>>, motion: Option<
         (Some(t), Some(m)) => {
             let mut pos_x = t.x;
             let mut pos_y = t.y;
-            let mut next_move = m.next_move;
-            if (next_move <= 0) {
-                pos_x += m.velo_x;
-                pos_y += m.velo_y;
-                next_move += m.move_rate;
-                println!("Moved! Next move: {}", next_move);
-            } else {
-                next_move -= ticks as i32;
-                println!("Next move: {}", next_move);
+            let move_portion = 1000.0 / ticks as f32;
+            let x_dist = m.velo_x / move_portion;
+            if (x_dist > 0.0) {
+                println!("Moving {}", x_dist);
             }
+            pos_x += x_dist;
+            pos_y += m.velo_y / move_portion;
 
             (
                 Some(Transform{
@@ -42,10 +39,7 @@ fn apply_movement(ticks: u32, transform: Option<Arc<Transform>>, motion: Option<
                     y: pos_y,
                     .. *t.deref()
                 }),
-                Some(Motion {
-                    next_move: next_move,
-                    .. *m.deref()
-                })
+                Some((*m.deref()).clone())
             )
         },
         (_, _) => (None, None)
