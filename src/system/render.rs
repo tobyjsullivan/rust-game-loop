@@ -6,9 +6,12 @@ use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use std::ops::Deref;
 
-use component::Sprite;
-use component::Transform;
-use component::ComponentManager;
+use component::{
+    Sprite,
+    Transform,
+    Camera,
+    ComponentManager
+};
 
 pub struct Render {
     canvas: Canvas<Window>,
@@ -36,28 +39,43 @@ impl Render {
         }
     }
 
-    pub fn render(&mut self, ticks: u32, sprites: &ComponentManager<Sprite>, transforms: &ComponentManager<Transform>) {
+    pub fn render(
+        &mut self, _ticks: u32,
+        cameras: &ComponentManager<Camera>,
+        sprites: &ComponentManager<Sprite>,
+        transforms: &ComponentManager<Transform>) {
+
+        // For now, only one scene is rendered regarless of the number of cameras.
+        // The scene is zoomed out to include all regions covered by any camera.
+        // This means some regions may be visible even if they are not covered by any cameras.
         let mut scene_left = 0.0;
         let mut scene_right = 0.0;
         let mut scene_top = 0.0;
         let mut scene_bottom = 0.0;
 
-        for arc_entity in sprites.keys() {
+        for arc_entity in cameras.keys() {
             let entity = arc_entity.deref().clone();
-            match transforms.get(&entity) {
-                Some(t) => {
-                    if t.x < scene_left {
-                        scene_left = t.x;
-                    } else if t.x > scene_right {
-                        scene_right = t.x;
+            match (cameras.get(&entity), transforms.get(&entity)) {
+                (Some(c), Some(t)) => {
+                    println!("Camera: x: {}, y: {}, width: {}, height: {}.", t.x, t.y, c.view_width, c.view_height);
+                    let camera_left = t.x - (c.view_width / 2.0);
+                    let camera_right = t.x + (c.view_width / 2.0);
+                    let camera_top = t.y - (c.view_height / 2.0);
+                    let camera_bottom = t.y + (c.view_height / 2.0);
+                    if scene_left == 0.0 || camera_left < scene_left {
+                        scene_left = camera_left;
                     }
-                    if t.y < scene_top {
-                        scene_top = t.y;
-                    } else if t.y > scene_bottom {
-                        scene_bottom = t.y;
+                    if scene_right == 0.0 || camera_right > scene_right {
+                        scene_right = camera_right;
+                    }
+                    if scene_top == 0.0 || camera_top < scene_top {
+                        scene_top = camera_top;
+                    }
+                    if scene_bottom == 0.0 ||camera_bottom > scene_bottom {
+                        scene_bottom = camera_bottom;
                     }
                 },
-                None => ()
+                (_, _) => {}
             };
         }
 
@@ -75,14 +93,17 @@ impl Render {
             let entity = arc_entity.deref().clone();
             match (sprites.get(&entity), transforms.get(&entity)) {
                 (Some(s), Some(t)) => {
-                    let left: i32 = (t.x * scene_scale) as i32;
-                    let width: i32 = max(scene_scale, 1.0) as i32;
-                    let top: i32 = (t.y * scene_scale) as i32;
-                    let height: i32 = max(scene_scale, 1.0) as i32;
-                    println!("Rendering: {} at {}x{}", entity.id, left, top);
+                    let left: i32 = round((t.x - scene_left) * scene_scale);
+                    let top: i32 = round((t.y - scene_top) * scene_scale);
+                    let width: i32 = round(max(scene_scale, 1.0));
+                    let height: i32 = round(max(scene_scale, 1.0));
                     let rect = Rect::new(left, top, width as u32, height as u32);
                     self.canvas.set_draw_color(s.color);
-                    self.canvas.draw_rect(rect).unwrap();
+                    if s.fill {
+                        self.canvas.fill_rect(rect).unwrap();
+                    } else {
+                        self.canvas.draw_rect(rect).unwrap();
+                    }
                 },
                 (_, _) => ()
             };
@@ -96,4 +117,12 @@ impl Render {
 fn clear_canvas(canvas: &mut Canvas<Window>) {
     canvas.set_draw_color(Color::RGB(0, 0, 0));
     canvas.clear();
+}
+
+fn round(v: f32) -> i32 {
+    if v % 1.0 < 0.5 {
+        v.floor() as i32
+    } else {
+        v.ceil() as i32
+    }
 }

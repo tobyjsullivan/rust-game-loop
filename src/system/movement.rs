@@ -14,9 +14,8 @@ impl Movement {
     pub fn apply(&self, ticks: u32, transforms: ComponentManager<Transform>, motions: &ComponentManager<Motion>) -> ComponentManager<Transform> {
         let transforms_keys = transforms.keys();
         let mut new_transforms = transforms;
-        let mut new_motions = motions;
         for entity in transforms_keys {
-            match apply_movement(ticks, new_transforms.get(&entity), new_motions.get(&entity)) {
+            match apply_movement(ticks, new_transforms.get(&entity), motions.get(&entity)) {
                 Some(t) => {
                     new_transforms = new_transforms.set(&entity, t.clone());
                 }
@@ -35,9 +34,6 @@ fn apply_movement(ticks: u32, transform: Option<Arc<Transform>>, motion: Option<
             let mut pos_y = t.y;
             let move_portion = 1000.0 / ticks as f32;
             let x_dist = m.velo_x / move_portion;
-            if x_dist > 0.0 {
-                println!("Moving {}", x_dist);
-            }
             pos_x += x_dist;
             pos_y += m.velo_y / move_portion;
 
