@@ -2,17 +2,20 @@
 
 extern crate im;
 extern crate sdl2;
+extern crate rand;
 
 use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use std::time::Instant;
 use im::HashSet;
+use rand::{Rng, thread_rng};
 
 mod entity;
 mod component;
 mod system;
 mod control;
+mod map;
 
 use entity::EntityProducer;
 use component::{
@@ -31,6 +34,7 @@ use system::{
     Controller
 };
 use control::Control;
+use map::Tile;
 
 const SCREEN_HEIGHT: u32 = 640;
 const SCREEN_WIDTH: u32 = 1200;
@@ -107,27 +111,39 @@ fn main() {
     }
 }
 
-fn create_land_tile(x: f32, y: f32, producer: &mut EntityProducer, sprites: ComponentManager<Sprite>, transforms: ComponentManager<Transform>) -> (ComponentManager<Sprite>, ComponentManager<Transform>) {
-    let tile = producer.create();
+fn create_land_tile(x: f32, y: f32, tile: &Tile, producer: &mut EntityProducer, sprites: ComponentManager<Sprite>, transforms: ComponentManager<Transform>) -> (ComponentManager<Sprite>, ComponentManager<Transform>) {
+    let entity = producer.create();
     (
-        sprites.set(&tile, Sprite{color: Color::RGB(0, 255, 0), fill: true, z_index: 0}),
-        transforms.set(&tile, Transform{ x, y })
+        sprites.set(&entity, Sprite{color: Tile::color(tile), fill: true, z_index: 0}),
+        transforms.set(&entity, Transform{ x, y })
     )
 }
 
 fn init_land_tiles(producer: &mut EntityProducer, sprites: ComponentManager<Sprite>, transforms: ComponentManager<Transform>) -> (ComponentManager<Sprite>, ComponentManager<Transform>) {
     let mut new_sprites = sprites;
     let mut new_transforms = transforms;
+    let mut prev_tile: Tile = Tile::Grass;
     for x in 0..WORLD_WIDTH {
         for y in 0..WORLD_HEIGHT {
-            match create_land_tile(x as f32, y as f32, producer, new_sprites, new_transforms) {
+            let next_tile = next_tile(&prev_tile);
+            match create_land_tile(x as f32, y as f32, &next_tile, producer, new_sprites, new_transforms) {
                 (s, t) => {
                     new_sprites = s;
                     new_transforms = t
                 }
             }
+            prev_tile = next_tile;
         }
     }
 
     (new_sprites, new_transforms)
+}
+
+fn next_tile(prev: &Tile) -> Tile {
+    let mut rng = thread_rng();
+    if rng.gen::<f32>() < 0.7 {
+        Tile::Grass
+    } else {
+        Tile::Water
+    }
 }
