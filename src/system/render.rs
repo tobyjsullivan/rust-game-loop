@@ -80,6 +80,18 @@ impl Render {
             };
         }
 
+        // Adjust scene to avoid rendering out of bounds
+        if scene_left < 0.0 {
+            let adj = 0.0 - scene_left;
+            scene_left += adj;
+            scene_right += adj;
+        }
+        if scene_top < 0.0 {
+            let adj = 0.0 - scene_top;
+            scene_top += adj;
+            scene_bottom += adj;
+        }
+
         let scene_width = (scene_right - scene_left) + 1.0;
         let scene_height = (scene_bottom - scene_top) + 1.0;
         let min = |a: f32, b: f32| if a < b { a } else { b };
