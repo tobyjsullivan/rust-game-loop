@@ -35,25 +35,20 @@ fn main() {
     let e2 = entity::Entity{id: 2};
     let e3 = entity::Entity{id: 3};
 
-    let spriteCm: ComponentManager<Sprite> = ComponentManager::new();
+    let mut sprites: ComponentManager<Sprite> = ComponentManager::new();
+    sprites = sprites.set(&e1, Sprite{width: 32, height: 32, color: Color::RGB(255, 0, 0)});
+    sprites = sprites.set(&e2, Sprite{width: 32, height: 32, color: Color::RGB(0, 255, 0)});
+    sprites = sprites.set(&e3, Sprite{width: 32, height: 32, color: Color::RGB(0, 0, 255)});
 
-    let mut sprites = hashmap!{
-        Entity{ .. e1 } => Sprite{width: 32, height: 32, color: Color::RGB(255, 0, 0)},
-        Entity{ .. e2 } => Sprite{width: 32, height: 32, color: Color::RGB(0, 255, 0)},
-        Entity{ .. e3 } => Sprite{width: 32, height: 32, color: Color::RGB(0, 0, 255)}
-    };
+    let mut transforms: ComponentManager<Transform> = ComponentManager::new();
+    transforms = transforms.set(&e1, Transform{x: 3.0, y: 12.0});
+    transforms = transforms.set(&e2, Transform{x: 5.0, y: 2.0});
+    transforms = transforms.set(&e3, Transform{x: 16.0, y: 8.0});
 
-    let mut transforms = hashmap!{
-        Entity{ .. e1 } => Transform{x: 3.0, y: 12.0},
-        Entity{ .. e2 } => Transform{x: 5.0, y: 2.0},
-        Entity{ .. e3 } => Transform{x: 16.0, y: 8.0}
-    };
-
-    let mut motions = hashmap!{
-        Entity{ .. e1 } => Motion{velo_x: 100.0, velo_y: 100.0},
-        Entity{ .. e2 } => Motion{velo_x: 0.0, velo_y: 0.0},
-        Entity{ .. e3 } => Motion{velo_x: 0.0, velo_y: 0.0}
-    };
+    let mut motions: ComponentManager<Motion> = ComponentManager::new();
+    motions = motions.set(&e1, Motion{velo_x: 100.0, velo_y: 100.0});
+    motions = motions.set(&e2, Motion{velo_x: 0.0, velo_y: 0.0});
+    motions = motions.set(&e3, Motion{velo_x: 0.0, velo_y: 0.0});
 
     let mut last_tick = Instant::now();
     'main: loop {
@@ -68,9 +63,7 @@ fn main() {
             }
         }
 
-        let (t, m) = movement.apply(ticks, transforms, motions);
-        transforms = t;
-        motions = m;
+        transforms = movement.apply(ticks, transforms, &motions);
         render.render(ticks, &sprites, &transforms);
     }
 }

@@ -5,10 +5,12 @@ use sdl2::render::Canvas;
 use sdl2::video::Window;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
+use std::ops::Deref;
 
 use entity::Entity;
 use component::Sprite;
 use component::Transform;
+use component::ComponentManager;
 
 pub struct Render {
     canvas: Canvas<Window>
@@ -32,9 +34,11 @@ impl Render {
         }
     }
 
-    pub fn render(&mut self, ticks: u32, sprites: &HashMap<Entity, Sprite>, transforms: &HashMap<Entity, Transform>) {
+    pub fn render(&mut self, ticks: u32, sprites: &ComponentManager<Sprite>, transforms: &ComponentManager<Transform>) {
         clear_canvas(&mut self.canvas);
-        for entity in sprites.keys() {
+
+        for arc_entity in sprites.keys() {
+            let entity = arc_entity.deref().clone();
             match (sprites.get(&entity), transforms.get(&entity)) {
                 (Some(s), Some(t)) => {
                     println!("Rendering: {} at {}x{}", entity.id, t.x, t.y);
@@ -44,6 +48,7 @@ impl Render {
                 },
                 (_, _) => ()
             };
+
         }
 
         self.canvas.present();
