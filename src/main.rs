@@ -5,11 +5,14 @@ extern crate sdl2;
 
 use sdl2::pixels::Color;
 use sdl2::event::Event;
+use sdl2::keyboard::Keycode;
 use std::time::Instant;
+use im::HashSet;
 
 mod entity;
 mod component;
 mod system;
+mod control;
 
 use entity::EntityProducer;
 use component::{
@@ -18,9 +21,16 @@ use component::{
     Sprite,
     Transform,
     Follow,
-    Camera
+    Camera,
+    Joystick
 };
-use system::{Render, Movement, Tracking};
+use system::{
+    Render,
+    Movement,
+    Tracking,
+    Controller
+};
+use control::Control;
 
 const SCREEN_HEIGHT: u32 = 640;
 const SCREEN_WIDTH: u32 = 1200;
@@ -36,6 +46,7 @@ fn main() {
     let mut render = Render::new(&sdl_ctx, SCREEN_WIDTH, SCREEN_HEIGHT, WORLD_WIDTH as f32, WORLD_HEIGHT as f32);
     let movement = Movement::new();
     let tracking = Tracking::new();
+    let controller = Controller::new();
 
     let mut producer = EntityProducer::new();
 
@@ -44,6 +55,7 @@ fn main() {
     let mut motions: ComponentManager<Motion> = ComponentManager::new();
     let mut followers: ComponentManager<Follow> = ComponentManager::new();
     let mut cameras: ComponentManager<Camera> = ComponentManager::new();
+    let mut joysticks: ComponentManager<Joystick> = ComponentManager::new();
 
     match init_land_tiles(&mut producer, sprites, transforms) {
         (s, t) => {
@@ -56,6 +68,7 @@ fn main() {
     sprites = sprites.set(&player, Sprite{color: Color::RGB(255, 0, 0), fill: true});
     transforms = transforms.set(&player, Transform{x: START_X, y: START_Y});
     motions = motions.set(&player, Motion{velo_x: 1.0, velo_y: 1.0});
+    joysticks = joysticks.set(&player, Joystick{});
 
     let camera1 = producer.create();
     sprites = sprites.set(&camera1, Sprite{color: Color::RGB(255, 255, 255), fill: false});
@@ -66,6 +79,7 @@ fn main() {
 
     let mut frame_count = 0;
     let mut last_tick = Instant::now();
+    let mut controls: HashSet<Control> = HashSet::new();
     'main: loop {
         let ticks = last_tick.elapsed().subsec_millis();
         last_tick = Instant::now();
@@ -73,11 +87,14 @@ fn main() {
 
         for event in events.poll_iter() {
             match event {
-                Event::Quit { .. } => break 'main,
+                Event::Quit { .. } | Event::KeyDown { keycode: Some(Keycode::Escape), ..} => break 'main,
                 _ => {}
             }
+
+            controls = Control::mutate_controls(controls, event);
         }
 
+        motions = controller.apply(ticks, &controls, &joysticks, motions);
         motions = tracking.apply(ticks, &followers, &transforms, motions);
         transforms = movement.apply(ticks, transforms, &motions);
 
