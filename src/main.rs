@@ -65,13 +65,12 @@ fn main() {
     }
 
     let player = producer.create();
-    sprites = sprites.set(&player, Sprite{color: Color::RGB(255, 0, 0), fill: true});
+    sprites = sprites.set(&player, Sprite{color: Color::RGB(255, 0, 0), fill: true, z_index: 1});
     transforms = transforms.set(&player, Transform{x: START_X, y: START_Y});
     motions = motions.set(&player, Motion{velo_x: 1.0, velo_y: 1.0});
     joysticks = joysticks.set(&player, Joystick{});
 
     let camera1 = producer.create();
-    sprites = sprites.set(&camera1, Sprite{color: Color::RGB(255, 255, 255), fill: false});
     transforms = transforms.set(&camera1, Transform{x: START_X, y: START_Y});
     motions = motions.set(&camera1, Motion{velo_x: 0.0, velo_y: 0.0});
     followers = followers.set(&camera1, Follow{target: player.clone(), speed: 100.0});
@@ -116,7 +115,7 @@ fn main() {
 fn create_land_tile(x: f32, y: f32, producer: &mut EntityProducer, sprites: ComponentManager<Sprite>, transforms: ComponentManager<Transform>) -> (ComponentManager<Sprite>, ComponentManager<Transform>) {
     let tile = producer.create();
     (
-        sprites.set(&tile, Sprite{color: Color::RGB(0, 255, 0), fill: false}),
+        sprites.set(&tile, Sprite{color: Color::RGB(0, 255, 0), fill: true, z_index: 0}),
         transforms.set(&tile, Transform{ x, y })
     )
 }

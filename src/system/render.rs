@@ -5,7 +5,11 @@ use sdl2::video::Window;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use std::ops::Deref;
+use std::iter::FromIterator;
+use std::sync::Arc;
+use std::cmp::Ordering;
 
+use entity::Entity;
 use component::{
     Sprite,
     Transform,
@@ -114,7 +118,19 @@ impl Render {
 
         clear_canvas(&mut self.canvas);
 
-        for arc_entity in sprites.keys() {
+        let mut draw_order: Vec<Arc<Entity>> = Vec::from_iter(sprites.keys());
+        draw_order.sort_by(|a, b| {
+            match (sprites.get(a), sprites.get(b)) {
+                (Some(sa), Some(sb)) =>
+                    if sa.z_index < sb.z_index { Ordering::Less }
+                    else if sa.z_index > sb.z_index { Ordering::Greater }
+                    else { Ordering::Equal },
+                (Some(_), None) => Ordering::Greater,
+                (None, Some(_)) => Ordering::Less,
+                (None, None) => Ordering::Equal
+            }
+        });
+        for arc_entity in draw_order.iter() {
             let entity = arc_entity.deref().clone();
             match (sprites.get(&entity), transforms.get(&entity)) {
                 (Some(s), Some(t)) => {
