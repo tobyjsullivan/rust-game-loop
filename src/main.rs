@@ -1,19 +1,17 @@
 #![feature(duration_extras)]
 
-#[macro_use]
 extern crate im;
 extern crate sdl2;
 
-use std::thread;
 use sdl2::pixels::Color;
 use sdl2::event::Event;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 mod entity;
 mod component;
 mod system;
 
-use entity::Entity;
+use entity::EntityProducer;
 use component::ComponentManager;
 use component::Motion;
 use component::Sprite;
@@ -21,7 +19,7 @@ use component::Transform;
 use system::Render;
 use system::Movement;
 
-const SCREEN_HEIGHT: u32 = 800;
+const SCREEN_HEIGHT: u32 = 640;
 const SCREEN_WIDTH: u32 = 1200;
 
 fn main() {
@@ -31,24 +29,48 @@ fn main() {
     let mut render = Render::new(&sdl_ctx, SCREEN_WIDTH, SCREEN_HEIGHT);
     let mut movement = Movement::new();
 
-    let e1 = entity::Entity{id: 1};
-    let e2 = entity::Entity{id: 2};
-    let e3 = entity::Entity{id: 3};
+    let mut producer = EntityProducer::new();
+
+    let tile00 = producer.create();
+    let tile01 = producer.create();
+    let tile02 = producer.create();
+    let tile10 = producer.create();
+    let tile11 = producer.create();
+    let tile12 = producer.create();
+    let tile20 = producer.create();
+    let tile21 = producer.create();
+    let tile22 = producer.create();
+
+    let player = producer.create();
 
     let mut sprites: ComponentManager<Sprite> = ComponentManager::new();
-    sprites = sprites.set(&e1, Sprite{width: 32, height: 32, color: Color::RGB(255, 0, 0)});
-    sprites = sprites.set(&e2, Sprite{width: 32, height: 32, color: Color::RGB(0, 255, 0)});
-    sprites = sprites.set(&e3, Sprite{width: 32, height: 32, color: Color::RGB(0, 0, 255)});
+    sprites = sprites.set(&tile00, Sprite{color: Color::RGB(0, 255, 0)});
+    sprites = sprites.set(&tile01, Sprite{color: Color::RGB(0, 255, 0)});
+    sprites = sprites.set(&tile02, Sprite{color: Color::RGB(0, 255, 0)});
+    sprites = sprites.set(&tile10, Sprite{color: Color::RGB(0, 255, 0)});
+    sprites = sprites.set(&tile11, Sprite{color: Color::RGB(0, 255, 0)});
+    sprites = sprites.set(&tile12, Sprite{color: Color::RGB(0, 255, 0)});
+    sprites = sprites.set(&tile20, Sprite{color: Color::RGB(0, 255, 0)});
+    sprites = sprites.set(&tile21, Sprite{color: Color::RGB(0, 255, 0)});
+    sprites = sprites.set(&tile22, Sprite{color: Color::RGB(0, 255, 0)});
+
+    sprites = sprites.set(&player, Sprite{color: Color::RGB(255, 0, 0)});
 
     let mut transforms: ComponentManager<Transform> = ComponentManager::new();
-    transforms = transforms.set(&e1, Transform{x: 3.0, y: 12.0});
-    transforms = transforms.set(&e2, Transform{x: 5.0, y: 2.0});
-    transforms = transforms.set(&e3, Transform{x: 16.0, y: 8.0});
+    transforms = transforms.set(&tile00, Transform{x: 0.0, y: 0.0});
+    transforms = transforms.set(&tile01, Transform{x: 1.0, y: 0.0});
+    transforms = transforms.set(&tile02, Transform{x: 2.0, y: 0.0});
+    transforms = transforms.set(&tile10, Transform{x: 0.0, y: 1.0});
+    transforms = transforms.set(&tile11, Transform{x: 1.0, y: 1.0});
+    transforms = transforms.set(&tile12, Transform{x: 2.0, y: 1.0});
+    transforms = transforms.set(&tile20, Transform{x: 0.0, y: 2.0});
+    transforms = transforms.set(&tile21, Transform{x: 1.0, y: 2.0});
+    transforms = transforms.set(&tile22, Transform{x: 2.0, y: 2.0});
+
+    transforms = transforms.set(&player, Transform{x: 1.0, y: 1.0});
 
     let mut motions: ComponentManager<Motion> = ComponentManager::new();
-    motions = motions.set(&e1, Motion{velo_x: 100.0, velo_y: 100.0});
-    motions = motions.set(&e2, Motion{velo_x: 0.0, velo_y: 0.0});
-    motions = motions.set(&e3, Motion{velo_x: 0.0, velo_y: 0.0});
+    motions = motions.set(&player, Motion{velo_x: 2.0, velo_y: 2.0});
 
     let mut last_tick = Instant::now();
     'main: loop {

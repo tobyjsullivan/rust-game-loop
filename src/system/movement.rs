@@ -1,5 +1,3 @@
-use im::HashMap;
-use entity::Entity;
 use component::Transform;
 use component::Motion;
 use component::ComponentManager;
@@ -37,7 +35,7 @@ fn apply_movement(ticks: u32, transform: Option<Arc<Transform>>, motion: Option<
             let mut pos_y = t.y;
             let move_portion = 1000.0 / ticks as f32;
             let x_dist = m.velo_x / move_portion;
-            if (x_dist > 0.0) {
+            if x_dist > 0.0 {
                 println!("Moving {}", x_dist);
             }
             pos_x += x_dist;
