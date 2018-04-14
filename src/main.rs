@@ -24,8 +24,8 @@ use system::{Render, Movement, Tracking};
 
 const SCREEN_HEIGHT: u32 = 640;
 const SCREEN_WIDTH: u32 = 1200;
-const WORLD_WIDTH: i32 = 50;
-const WORLD_HEIGHT: i32 = 50;
+const WORLD_WIDTH: i32 = 20;
+const WORLD_HEIGHT: i32 = 20;
 const START_X: f32 = 1.0;
 const START_Y: f32 = 1.0;
 
@@ -33,7 +33,7 @@ fn main() {
     let sdl_ctx = sdl2::init().unwrap();
     let mut events = sdl_ctx.event_pump().unwrap();
 
-    let mut render = Render::new(&sdl_ctx, SCREEN_WIDTH, SCREEN_HEIGHT);
+    let mut render = Render::new(&sdl_ctx, SCREEN_WIDTH, SCREEN_HEIGHT, WORLD_WIDTH as f32, WORLD_HEIGHT as f32);
     let movement = Movement::new();
     let tracking = Tracking::new();
 

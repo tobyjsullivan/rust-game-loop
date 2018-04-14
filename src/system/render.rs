@@ -16,11 +16,13 @@ use component::{
 pub struct Render {
     canvas: Canvas<Window>,
     screen_width: u32,
-    screen_height: u32
+    screen_height: u32,
+    world_width: f32,
+    world_height: f32
 }
 
 impl Render {
-    pub fn new(sdl_ctx: &sdl2::Sdl, screen_width: u32, screen_height: u32) -> Self {
+    pub fn new(sdl_ctx: &sdl2::Sdl, screen_width: u32, screen_height: u32, world_width: f32, world_height: f32) -> Self {
         let video_subsystem = sdl_ctx.video().unwrap();
         let window = video_subsystem
             .window("game window", screen_width, screen_height)
@@ -35,7 +37,9 @@ impl Render {
         Render{
             canvas,
             screen_width,
-            screen_height
+            screen_height,
+            world_width,
+            world_height
         }
     }
 
@@ -59,9 +63,9 @@ impl Render {
                 (Some(c), Some(t)) => {
                     println!("Camera: x: {}, y: {}, width: {}, height: {}.", t.x, t.y, c.view_width, c.view_height);
                     let camera_left = t.x - (c.view_width / 2.0);
-                    let camera_right = t.x + (c.view_width / 2.0);
+                    let camera_right = t.x + (c.view_width / 2.0) + 1.0;
                     let camera_top = t.y - (c.view_height / 2.0);
-                    let camera_bottom = t.y + (c.view_height / 2.0);
+                    let camera_bottom = t.y + (c.view_height / 2.0) + 1.0;
 
                     if scene_left == 0.0 || camera_left < scene_left {
                         scene_left = camera_left;
@@ -85,15 +89,23 @@ impl Render {
             let adj = 0.0 - scene_left;
             scene_left += adj;
             scene_right += adj;
+        } else if scene_right > self.world_width {
+            let adj = self.world_width - scene_right;
+            scene_left += adj;
+            scene_right += adj;
         }
         if scene_top < 0.0 {
             let adj = 0.0 - scene_top;
             scene_top += adj;
             scene_bottom += adj;
+        } else if scene_bottom > self.world_height {
+            let adj = self.world_height - scene_bottom;
+            scene_top += adj;
+            scene_bottom += adj;
         }
 
-        let scene_width = (scene_right - scene_left) + 1.0;
-        let scene_height = (scene_bottom - scene_top) + 1.0;
+        let scene_width = (scene_right - scene_left);
+        let scene_height = (scene_bottom - scene_top);
         let min = |a: f32, b: f32| if a < b { a } else { b };
         let max = |a: f32, b: f32| if a > b { a } else { b };
         let scene_scale: f32 = min(self.screen_width as f32 / scene_width, self.screen_height as f32 / scene_height);
@@ -122,6 +134,15 @@ impl Render {
             };
 
         }
+
+        // Debug camera outline
+        let rect = Rect::new(
+            (0.0 * scene_scale) as i32,
+            (0.0 * scene_scale) as i32,
+            (scene_width * scene_scale) as u32,
+            (scene_height * scene_scale) as u32);
+        self.canvas.set_draw_color(Color::RGB(255, 255, 255));
+        self.canvas.draw_rect(rect).unwrap();
 
         self.canvas.present();
     }
