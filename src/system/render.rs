@@ -62,6 +62,7 @@ impl Render {
                     let camera_right = t.x + (c.view_width / 2.0);
                     let camera_top = t.y - (c.view_height / 2.0);
                     let camera_bottom = t.y + (c.view_height / 2.0);
+
                     if scene_left == 0.0 || camera_left < scene_left {
                         scene_left = camera_left;
                     }
@@ -71,7 +72,7 @@ impl Render {
                     if scene_top == 0.0 || camera_top < scene_top {
                         scene_top = camera_top;
                     }
-                    if scene_bottom == 0.0 ||camera_bottom > scene_bottom {
+                    if scene_bottom == 0.0 || camera_bottom > scene_bottom {
                         scene_bottom = camera_bottom;
                     }
                 },
