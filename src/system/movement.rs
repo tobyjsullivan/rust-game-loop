@@ -5,20 +5,31 @@ use component::Motion;
 use std::sync::Arc;
 use std::ops::Deref;
 
-pub fn movement(ticks: u32, transforms: HashMap<Entity, Transform>, motions: HashMap<Entity, Motion>) -> (HashMap<Entity, Transform>, HashMap<Entity, Motion>) {
-    let mut new_transforms = transforms.clone();
-    let mut new_motions = motions.clone();
-    for entity in transforms.keys() {
-        match apply_movement(ticks, transforms.get(&entity), motions.get(&entity)) {
-            (Some(t), Some(m)) => {
-                new_motions = new_motions.update(&entity, |_| { Some(Arc::new(m.clone())) });
-                new_transforms = new_transforms.update(&entity, |_| { Some(Arc::new(t.clone())) });
-            }
-            (_, _) => {}
-        }
-    }
-    (new_transforms.clone(), new_motions.clone())
+pub struct Movement {
+
 }
+
+impl Movement {
+    pub fn new() -> Self {
+        Movement{}
+    }
+
+    pub fn apply(&self, ticks: u32, transforms: HashMap<Entity, Transform>, motions: HashMap<Entity, Motion>) -> (HashMap<Entity, Transform>, HashMap<Entity, Motion>) {
+        let mut new_transforms = transforms.clone();
+        let mut new_motions = motions.clone();
+        for entity in transforms.keys() {
+            match apply_movement(ticks, transforms.get(&entity), motions.get(&entity)) {
+                (Some(t), Some(m)) => {
+                    new_motions = new_motions.update(&entity, |_| { Some(Arc::new(m.clone())) });
+                    new_transforms = new_transforms.update(&entity, |_| { Some(Arc::new(t.clone())) });
+                }
+                (_, _) => {}
+            }
+        }
+        (new_transforms.clone(), new_motions.clone())
+    }
+}
+
 
 fn apply_movement(ticks: u32, transform: Option<Arc<Transform>>, motion: Option<Arc<Motion>>) -> (Option<Transform>, Option<Motion>) {
     match (transform, motion) {

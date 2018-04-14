@@ -14,11 +14,12 @@ mod component;
 mod system;
 
 use entity::Entity;
+use component::ComponentManager;
 use component::Motion;
 use component::Sprite;
 use component::Transform;
-use system::render::Render;
-use system::movement;
+use system::Render;
+use system::Movement;
 
 const SCREEN_HEIGHT: u32 = 800;
 const SCREEN_WIDTH: u32 = 1200;
@@ -28,10 +29,13 @@ fn main() {
     let mut events = sdl_ctx.event_pump().unwrap();
 
     let mut render = Render::new(&sdl_ctx, SCREEN_WIDTH, SCREEN_HEIGHT);
+    let mut movement = Movement::new();
 
     let e1 = entity::Entity{id: 1};
     let e2 = entity::Entity{id: 2};
     let e3 = entity::Entity{id: 3};
+
+    let spriteCm: ComponentManager<Sprite> = ComponentManager::new();
 
     let mut sprites = hashmap!{
         Entity{ .. e1 } => Sprite{width: 32, height: 32, color: Color::RGB(255, 0, 0)},
@@ -64,7 +68,7 @@ fn main() {
             }
         }
 
-        let (t, m) = movement::movement(ticks, transforms, motions);
+        let (t, m) = movement.apply(ticks, transforms, motions);
         transforms = t;
         motions = m;
         render.render(ticks, &sprites, &transforms);
