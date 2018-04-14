@@ -1,6 +1,6 @@
 use entity::Entity;
 
-pub struct Follow<'a> {
-  pub target: &'a Entity,
+pub struct Follow {
+  pub target: Entity,
   pub speed: f32
 }

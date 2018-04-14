@@ -17,7 +17,7 @@ impl Tracking {
     let mut new_motions = motions;
     for entity in followers.keys() {
       followers.get(&entity).map(|follow| {
-        match (transforms.get(follow.target), transforms.get(&entity), new_motions.get(&entity)) {
+        match (transforms.get(&follow.target), transforms.get(&entity), new_motions.get(&entity)) {
           (Some(target_transform), Some(current_transform), Some(m)) => {
             let diff_x = target_transform.x - current_transform.x;
             let diff_y = target_transform.y - current_transform.y;

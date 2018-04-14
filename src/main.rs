@@ -38,8 +38,6 @@ fn main() {
     let tracking = Tracking::new();
 
     let mut producer = EntityProducer::new();
-    let player = producer.create();
-    let camera1 = producer.create();
 
     let mut sprites: ComponentManager<Sprite> = ComponentManager::new();
     let mut transforms: ComponentManager<Transform> = ComponentManager::new();
@@ -54,14 +52,16 @@ fn main() {
         }
     }
 
+    let player = producer.create();
     sprites = sprites.set(&player, Sprite{color: Color::RGB(255, 0, 0), fill: true});
     transforms = transforms.set(&player, Transform{x: START_X, y: START_Y});
     motions = motions.set(&player, Motion{velo_x: 1.0, velo_y: 1.0});
 
+    let camera1 = producer.create();
     sprites = sprites.set(&camera1, Sprite{color: Color::RGB(255, 255, 255), fill: false});
     transforms = transforms.set(&camera1, Transform{x: START_X, y: START_Y});
     motions = motions.set(&camera1, Motion{velo_x: 0.0, velo_y: 0.0});
-    followers = followers.set(&camera1, Follow{target: &player, speed: 100.0});
+    followers = followers.set(&camera1, Follow{target: player.clone(), speed: 100.0});
     cameras = cameras.set(&camera1, Camera{view_width: 10.0, view_height: 10.0});
 
     let mut frame_count = 0;
