@@ -30,9 +30,11 @@ impl Render {
         let video_subsystem = sdl_ctx.video().unwrap();
         let window = video_subsystem
             .window("game window", screen_width, screen_height)
-            .position_centered()
+            .fullscreen_desktop()
             .build()
             .unwrap();
+
+        let display_mode = window.display_mode().unwrap();
 
         let mut canvas = window.into_canvas().accelerated().build().unwrap();
 
@@ -40,8 +42,8 @@ impl Render {
 
         Render{
             canvas,
-            screen_width,
-            screen_height,
+            screen_width: display_mode.w as u32,
+            screen_height: display_mode.h as u32,
             world_width,
             world_height
         }
