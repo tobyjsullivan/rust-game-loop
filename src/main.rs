@@ -34,57 +34,30 @@ fn main() {
     let tracking = Tracking::new();
 
     let mut producer = EntityProducer::new();
-
-    let tile00 = producer.create();
-    let tile01 = producer.create();
-    let tile02 = producer.create();
-    let tile10 = producer.create();
-    let tile11 = producer.create();
-    let tile12 = producer.create();
-    let tile20 = producer.create();
-    let tile21 = producer.create();
-    let tile22 = producer.create();
-
     let player = producer.create();
-
     let camera1 = producer.create();
 
     let mut sprites: ComponentManager<Sprite> = ComponentManager::new();
-    sprites = sprites.set(&tile00, Sprite{color: Color::RGB(0, 255, 0), fill: false});
-    sprites = sprites.set(&tile01, Sprite{color: Color::RGB(255, 255, 0), fill: false});
-    sprites = sprites.set(&tile02, Sprite{color: Color::RGB(0, 255, 255), fill: false});
-    sprites = sprites.set(&tile10, Sprite{color: Color::RGB(0, 255, 0), fill: false});
-    sprites = sprites.set(&tile11, Sprite{color: Color::RGB(255, 255, 0), fill: false});
-    sprites = sprites.set(&tile12, Sprite{color: Color::RGB(0, 255, 255), fill: false});
-    sprites = sprites.set(&tile20, Sprite{color: Color::RGB(0, 255, 0), fill: false});
-    sprites = sprites.set(&tile21, Sprite{color: Color::RGB(255, 255, 0), fill: false});
-    sprites = sprites.set(&tile22, Sprite{color: Color::RGB(0, 255, 255), fill: false});
+    let mut transforms: ComponentManager<Transform> = ComponentManager::new();
+    let mut motions: ComponentManager<Motion> = ComponentManager::new();
+    let mut followers: ComponentManager<Follow> = ComponentManager::new();
+    let mut cameras: ComponentManager<Camera> = ComponentManager::new();
+
+    match init_land_tiles(&mut producer, sprites, transforms) {
+        (s, t) => {
+            sprites = s;
+            transforms = t;
+        }
+    }
 
     sprites = sprites.set(&player, Sprite{color: Color::RGB(255, 0, 0), fill: true});
-    sprites = sprites.set(&camera1, Sprite{color: Color::RGB(255, 255, 255), fill: false});
-
-    let mut transforms: ComponentManager<Transform> = ComponentManager::new();
-    transforms = transforms.set(&tile00, Transform{x: 0.0, y: 0.0});
-    transforms = transforms.set(&tile01, Transform{x: 1.0, y: 0.0});
-    transforms = transforms.set(&tile02, Transform{x: 2.0, y: 0.0});
-    transforms = transforms.set(&tile10, Transform{x: 0.0, y: 1.0});
-    transforms = transforms.set(&tile11, Transform{x: 1.0, y: 1.0});
-    transforms = transforms.set(&tile12, Transform{x: 2.0, y: 1.0});
-    transforms = transforms.set(&tile20, Transform{x: 0.0, y: 2.0});
-    transforms = transforms.set(&tile21, Transform{x: 1.0, y: 2.0});
-    transforms = transforms.set(&tile22, Transform{x: 2.0, y: 2.0});
-
-    transforms = transforms.set(&camera1, Transform{x: 1.0, y: 1.0});
     transforms = transforms.set(&player, Transform{x: 1.0, y: 1.0});
-
-    let mut motions: ComponentManager<Motion> = ComponentManager::new();
     motions = motions.set(&player, Motion{velo_x: 1.0, velo_y: 1.0});
+
+    sprites = sprites.set(&camera1, Sprite{color: Color::RGB(255, 255, 255), fill: false});
+    transforms = transforms.set(&camera1, Transform{x: 1.0, y: 1.0});
     motions = motions.set(&camera1, Motion{velo_x: 0.0, velo_y: 0.0});
-
-    let mut followers: ComponentManager<Follow> = ComponentManager::new();
     followers = followers.set(&camera1, Follow{target: &player, speed: 100.0});
-
-    let mut cameras: ComponentManager<Camera> = ComponentManager::new();
     cameras = cameras.set(&camera1, Camera{view_width: 3.0, view_height: 3.0});
 
     let mut frame_count = 0;
@@ -117,4 +90,29 @@ fn main() {
         //     break;
         // }
     }
+}
+
+fn create_land_tile(x: f32, y: f32, producer: &mut EntityProducer, sprites: ComponentManager<Sprite>, transforms: ComponentManager<Transform>) -> (ComponentManager<Sprite>, ComponentManager<Transform>) {
+    let tile = producer.create();
+    (
+        sprites.set(&tile, Sprite{color: Color::RGB(0, 255, 0), fill: false}),
+        transforms.set(&tile, Transform{ x, y })
+    )
+}
+
+fn init_land_tiles(producer: &mut EntityProducer, sprites: ComponentManager<Sprite>, transforms: ComponentManager<Transform>) -> (ComponentManager<Sprite>, ComponentManager<Transform>) {
+    let mut new_sprites = sprites;
+    let mut new_transforms = transforms;
+    for x in 0..20 {
+        for y in 0..20 {
+            match create_land_tile(x as f32, y as f32, producer, new_sprites, new_transforms) {
+                (s, t) => {
+                    new_sprites = s;
+                    new_transforms = t
+                }
+            }
+        }
+    }
+
+    (new_sprites, new_transforms)
 }
