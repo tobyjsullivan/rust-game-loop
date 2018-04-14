@@ -7,11 +7,13 @@ use component::{
 use std::ops::Deref;
 use im::HashSet;
 
-pub struct Controller {}
+pub struct Controller {
+  player_speed: f32
+}
 
 impl Controller {
-  pub fn new() -> Self {
-    Controller{}
+  pub fn new(player_speed: f32) -> Self {
+    Controller{ player_speed }
   }
 
   pub fn apply(
@@ -27,7 +29,7 @@ impl Controller {
       new_motions.get(&entity)
         .map(|m| {
           controls.iter().fold(Motion{ velo_x: 0.0, velo_y: 0.0, .. *m.deref() }, |acc, c| {
-            map_motion(acc, c.deref())
+            self.map_motion(acc, c.deref())
           })
         })
         .map(|m| {
@@ -36,14 +38,13 @@ impl Controller {
     }
     new_motions
   }
-}
 
-fn map_motion(orig: Motion, c: &Control) -> Motion {
-  match c {
-    Control::MoveUp => Motion{ velo_y: -1.0, .. orig },
-    Control::MoveDown => Motion{ velo_y: 1.0, .. orig },
-    Control::MoveLeft => Motion{ velo_x: -1.0, .. orig },
-    Control::MoveRight => Motion{ velo_x: 1.0, .. orig },
-    _ => orig
+  fn map_motion(&self, orig: Motion, c: &Control) -> Motion {
+    match c {
+      Control::MoveUp => Motion{ velo_y: -self.player_speed, .. orig },
+      Control::MoveDown => Motion{ velo_y: self.player_speed, .. orig },
+      Control::MoveLeft => Motion{ velo_x: -self.player_speed, .. orig },
+      Control::MoveRight => Motion{ velo_x: self.player_speed, .. orig },
+    }
   }
 }

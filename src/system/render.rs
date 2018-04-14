@@ -108,8 +108,8 @@ impl Render {
             scene_bottom += adj;
         }
 
-        let scene_width = (scene_right - scene_left);
-        let scene_height = (scene_bottom - scene_top);
+        let scene_width = scene_right - scene_left;
+        let scene_height = scene_bottom - scene_top;
         let min = |a: f32, b: f32| if a < b { a } else { b };
         let max = |a: f32, b: f32| if a > b { a } else { b };
         let scene_scale: f32 = min(self.screen_width as f32 / scene_width, self.screen_height as f32 / scene_height);
@@ -134,10 +134,10 @@ impl Render {
             let entity = arc_entity.deref().clone();
             match (sprites.get(&entity), transforms.get(&entity)) {
                 (Some(s), Some(t)) => {
-                    let left: i32 = round((t.x - scene_left) * scene_scale);
-                    let top: i32 = round((t.y - scene_top) * scene_scale);
-                    let width: i32 = round(max(scene_scale, 1.0));
-                    let height: i32 = round(max(scene_scale, 1.0));
+                    let left: i32 = ((t.x - scene_left) * scene_scale).floor() as i32;
+                    let top: i32 = ((t.y - scene_top) * scene_scale).floor() as i32;
+                    let width: i32 = max(scene_scale, 1.0).ceil() as i32;
+                    let height: i32 = max(scene_scale, 1.0).ceil() as i32;
                     let rect = Rect::new(left, top, width as u32, height as u32);
                     self.canvas.set_draw_color(s.color);
                     if s.fill {
@@ -167,12 +167,4 @@ impl Render {
 fn clear_canvas(canvas: &mut Canvas<Window>) {
     canvas.set_draw_color(Color::RGB(0, 0, 0));
     canvas.clear();
-}
-
-fn round(v: f32) -> i32 {
-    if v % 1.0 < 0.5 {
-        v.floor() as i32
-    } else {
-        v.ceil() as i32
-    }
 }

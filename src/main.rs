@@ -38,6 +38,7 @@ const WORLD_WIDTH: i32 = 20;
 const WORLD_HEIGHT: i32 = 20;
 const START_X: f32 = 1.0;
 const START_Y: f32 = 1.0;
+const PLAYER_SPEED: f32 = 4.0;
 
 fn main() {
     let sdl_ctx = sdl2::init().unwrap();
@@ -46,7 +47,7 @@ fn main() {
     let mut render = Render::new(&sdl_ctx, SCREEN_WIDTH, SCREEN_HEIGHT, WORLD_WIDTH as f32, WORLD_HEIGHT as f32);
     let movement = Movement::new();
     let tracking = Tracking::new();
-    let controller = Controller::new();
+    let controller = Controller::new(PLAYER_SPEED);
 
     let mut producer = EntityProducer::new();
 
@@ -97,12 +98,6 @@ fn main() {
         motions = tracking.apply(ticks, &followers, &transforms, motions);
         transforms = movement.apply(ticks, transforms, &motions);
 
-        transforms.get(&player).map(|t| {
-            println!("Player: {}x{}", t.x, t.y);
-        });
-        transforms.get(&camera1).map(|t| {
-            println!("Camera: {}x{}", t.x, t.y);
-        });
         render.render(ticks, &cameras, &sprites, &transforms);
 
         frame_count += 1;
