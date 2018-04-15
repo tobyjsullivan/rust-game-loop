@@ -28,7 +28,11 @@ impl Walking {
           if w.in_motion() {
             (Some(generate_transform(ticks, &w, &t)), Some(Walk{step: w.step + ticks as i32, .. *w.deref()}))
           } else {
-            (None, None)
+            (Some(Transform{
+              x: t.x.round(),
+              y: t.y.round(),
+              .. *t.deref()
+            }), None)
           }
         },
         _ => (None, None)

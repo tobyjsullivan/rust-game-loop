@@ -40,7 +40,7 @@ const WORLD_WIDTH: i32 = 20;
 const WORLD_HEIGHT: i32 = 20;
 const START_X: f64 = 1.0;
 const START_Y: f64 = 1.0;
-const PLAYER_SPEED: f64 = 4.0;
+const PLAYER_SPEED: f64 = 8.0;
 
 fn main() {
     let sdl_ctx = sdl2::init().unwrap();
