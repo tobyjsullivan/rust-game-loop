@@ -26,13 +26,18 @@ pub struct Render {
 }
 
 impl Render {
-    pub fn new(sdl_ctx: &sdl2::Sdl, screen_width: u32, screen_height: u32, world_width: f64, world_height: f64) -> Self {
+    pub fn new(sdl_ctx: &sdl2::Sdl, screen_width: u32, screen_height: u32, world_width: f64, world_height: f64, fullscreen: bool) -> Self {
         let video_subsystem = sdl_ctx.video().unwrap();
-        let window = video_subsystem
-            .window("game window", screen_width, screen_height)
-            .fullscreen_desktop()
-            .build()
-            .unwrap();
+        let mut window_builder = video_subsystem
+            .window("game window", screen_width, screen_height);
+
+        let window_builder = if fullscreen {
+            window_builder.fullscreen_desktop()
+        } else {
+            window_builder.position_centered()
+        };
+
+        let window = window_builder.build().unwrap();
 
         let display_mode = window.display_mode().unwrap();
 
