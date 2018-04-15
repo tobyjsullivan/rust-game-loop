@@ -1,5 +1,6 @@
 use sdl2::pixels::Color;
 
+#[derive(Clone)]
 pub enum Tile {
   Grass,
   Water

@@ -25,7 +25,8 @@ use component::{
     Camera,
     Joystick,
     TransitionalMotion,
-    Collidable
+    Collidable,
+    MapTile
 };
 use system::{
     Render,
@@ -37,8 +38,8 @@ use map::Tile;
 
 const SCREEN_HEIGHT: u32 = 640;
 const SCREEN_WIDTH: u32 = 1200;
-const WORLD_WIDTH: i32 = 20;
-const WORLD_HEIGHT: i32 = 20;
+const WORLD_WIDTH: i32 = 200;
+const WORLD_HEIGHT: i32 = 200;
 const START_X: f64 = 1.0;
 const START_Y: f64 = 1.0;
 const PLAYER_SPEED: f64 = 8.0;
@@ -60,12 +61,14 @@ fn main() {
     let mut joysticks: ComponentManager<Joystick> = ComponentManager::new();
     let mut motions: ComponentManager<TransitionalMotion> = ComponentManager::new();
     let mut collidables: ComponentManager<Collidable> = ComponentManager::new();
+    let mut map_tiles: ComponentManager<MapTile> = ComponentManager::new();
 
-    match init_land_tiles(&mut producer, sprites, transforms, collidables) {
-        (s, t, c) => {
+    match init_land_tiles(&mut producer, sprites, transforms, collidables, map_tiles) {
+        (s, t, c, m) => {
             sprites = s;
             transforms = t;
             collidables = c;
+            map_tiles = m;
         }
     }
 
@@ -74,7 +77,7 @@ fn main() {
     transforms = transforms.set(&player, Transform{x: START_X, y: START_Y});
     joysticks = joysticks.set(&player, Joystick{});
     // Since we want to make the camera follow the player, we just make the player the camera. *brain explodes*
-    cameras = cameras.set(&player, Camera{view_width: 10.0, view_height: 10.0});
+    cameras = cameras.set(&player, Camera{view_width: 20.0, view_height: 20.0});
 
     let mut frame_count = 0;
     let mut last_tick = Instant::now();
@@ -100,7 +103,12 @@ fn main() {
             }
         }
 
+        let render_start = Instant::now();
         render.render(ticks, &cameras, &sprites, &transforms);
+        let render_time = render_start.elapsed().subsec_millis();
+        if frame_count % 100 == 0 {
+            println!("Render time: {}ms", render_time);
+        }
 
         frame_count += 1;
         // if frame_count > 1 {
@@ -116,8 +124,9 @@ fn create_land_tile(
     producer: &mut EntityProducer,
     sprites: ComponentManager<Sprite>,
     transforms: ComponentManager<Transform>,
-    collidables: ComponentManager<Collidable>
-    ) -> (ComponentManager<Sprite>, ComponentManager<Transform>, ComponentManager<Collidable>) {
+    collidables: ComponentManager<Collidable>,
+    map_tiles: ComponentManager<MapTile>
+    ) -> (ComponentManager<Sprite>, ComponentManager<Transform>, ComponentManager<Collidable>, ComponentManager<MapTile>) {
     let entity = producer.create();
     let new_collidables = if tile.obstruction() {
         collidables.set(&entity, Collidable{obstruction: true})
@@ -127,7 +136,8 @@ fn create_land_tile(
     (
         sprites.set(&entity, Sprite{color: Tile::color(tile), fill: true, z_index: 0}),
         transforms.set(&entity, Transform{ x, y }),
-        new_collidables
+        new_collidables,
+        map_tiles.set(&entity, MapTile{tile: tile.clone()})
     )
 }
 
@@ -135,33 +145,40 @@ fn init_land_tiles(
     producer: &mut EntityProducer,
     sprites: ComponentManager<Sprite>,
     transforms: ComponentManager<Transform>,
-    collidables: ComponentManager<Collidable>
-    ) -> (ComponentManager<Sprite>, ComponentManager<Transform>, ComponentManager<Collidable>) {
+    collidables: ComponentManager<Collidable>,
+    map_tiles: ComponentManager<MapTile>
+    ) -> (ComponentManager<Sprite>, ComponentManager<Transform>, ComponentManager<Collidable>, ComponentManager<MapTile>) {
     let mut new_sprites = sprites;
     let mut new_transforms = transforms;
     let mut new_collidables = collidables;
+    let mut new_map_tiles = map_tiles;
     let mut prev_tile: Tile = Tile::Grass;
     for x in 0..WORLD_WIDTH {
         for y in 0..WORLD_HEIGHT {
             let next_tile = next_tile(&prev_tile);
             match create_land_tile(x as f64, y as f64, &next_tile, producer,
-                new_sprites, new_transforms, new_collidables) {
-                (s, t, c) => {
+                new_sprites, new_transforms, new_collidables, new_map_tiles) {
+                (s, t, c, m) => {
                     new_sprites = s;
                     new_transforms = t;
                     new_collidables = c;
+                    new_map_tiles = m;
                 }
             }
             prev_tile = next_tile;
+
+            if x % 10 == 0 && y == 0 {
+                println!("Finished generating: {}x{}", x, y);
+            }
         }
     }
 
-    (new_sprites, new_transforms, new_collidables)
+    (new_sprites, new_transforms, new_collidables, new_map_tiles)
 }
 
 fn next_tile(prev: &Tile) -> Tile {
     let mut rng = thread_rng();
-    if rng.gen::<f32>() < 0.7 {
+    if rng.gen::<f32>() < 0.9 {
         Tile::Grass
     } else {
         Tile::Water

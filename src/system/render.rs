@@ -6,10 +6,8 @@ use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use std::ops::Deref;
 use std::iter::FromIterator;
-use std::sync::Arc;
 use std::cmp::Ordering;
 
-use entity::Entity;
 use component::{
     Sprite,
     Transform,
@@ -120,9 +118,15 @@ impl Render {
         let max = |a: f64, b: f64| if a > b { a } else { b };
         let scene_scale: f64 = min(self.screen_width as f64 / scene_width, self.screen_height as f64 / scene_height);
 
-        clear_canvas(&mut self.canvas);
+        let mut draw_order = Vec::from_iter(sprites.keys().filter(|entity| {
+            match transforms.get(&entity) {
+                Some(t) => {
+                    t.x >= scene_left && t.x <= scene_right && t.y >= scene_top && t.y <= scene_bottom
+                },
+                None => false
+            }
+        }));
 
-        let mut draw_order: Vec<Arc<Entity>> = Vec::from_iter(sprites.keys());
         draw_order.sort_by(|a, b| {
             match (sprites.get(a), sprites.get(b)) {
                 (Some(sa), Some(sb)) =>
@@ -134,6 +138,9 @@ impl Render {
                 (None, None) => Ordering::Equal
             }
         });
+
+        clear_canvas(&mut self.canvas);
+
         for arc_entity in draw_order.iter() {
             let entity = arc_entity.deref().clone();
             match (sprites.get(&entity), transforms.get(&entity)) {
