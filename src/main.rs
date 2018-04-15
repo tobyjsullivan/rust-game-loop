@@ -24,12 +24,12 @@ use component::{
     Transform,
     Camera,
     Joystick,
-    Walk
+    TransitionalMotion
 };
 use system::{
     Render,
     Controller,
-    Walking
+    Movement
 };
 use control::Control;
 use map::Tile;
@@ -48,7 +48,7 @@ fn main() {
 
     let mut render = Render::new(&sdl_ctx, SCREEN_WIDTH, SCREEN_HEIGHT, WORLD_WIDTH as f64, WORLD_HEIGHT as f64);
     let controller = Controller::new(PLAYER_SPEED);
-    let walking = Walking::new();
+    let movement = Movement::new();
 
     let mut producer = EntityProducer::new();
 
@@ -56,7 +56,7 @@ fn main() {
     let mut transforms: ComponentManager<Transform> = ComponentManager::new();
     let mut cameras: ComponentManager<Camera> = ComponentManager::new();
     let mut joysticks: ComponentManager<Joystick> = ComponentManager::new();
-    let mut walkers: ComponentManager<Walk> = ComponentManager::new();
+    let mut motions: ComponentManager<TransitionalMotion> = ComponentManager::new();
 
     match init_land_tiles(&mut producer, sprites, transforms) {
         (s, t) => {
@@ -88,10 +88,10 @@ fn main() {
             controls = Control::mutate_controls(controls, event);
         }
 
-        walkers = controller.apply(ticks, &controls, &joysticks, walkers, &transforms);
-        match walking.apply(ticks, walkers, transforms) {
-            (w, t) => {
-                walkers = w;
+        motions = controller.apply(ticks, &controls, &joysticks, motions, &transforms);
+        match movement.apply(ticks, motions, transforms) {
+            (m, t) => {
+                motions = m;
                 transforms = t;
             }
         }
