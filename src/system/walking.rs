@@ -3,7 +3,6 @@ use std::ops::Deref;
 use component::{
   ComponentManager,
   Walk,
-  Motion,
   Transform
 };
 
@@ -18,17 +17,16 @@ impl Walking {
     &self,
     ticks: u32,
     walkers: ComponentManager<Walk>,
-    motions: ComponentManager<Motion>,
-    transforms: &ComponentManager<Transform>
-    ) -> (ComponentManager<Walk>, ComponentManager<Motion>) {
+    transforms: ComponentManager<Transform>
+    ) -> (ComponentManager<Walk>, ComponentManager<Transform>) {
 
-    let mut new_motions = motions;
+    let mut new_transforms = transforms;
     let mut new_walkers = walkers;
     for entity in new_walkers.keys() {
-      let (motion, walk) = match (new_walkers.get(&entity), transforms.get(&entity)) {
+      let (transform, walk) = match (new_walkers.get(&entity), new_transforms.get(&entity)) {
         (Some(w), Some(t)) => {
           if w.in_motion() {
-            (Some(generate_motion(&w, &t)), Some(Walk{step: w.step + ticks as i32, .. *w.deref()}))
+            (Some(generate_transform(ticks, &w, &t)), Some(Walk{step: w.step + ticks as i32, .. *w.deref()}))
           } else {
             (None, None)
           }
@@ -36,9 +34,9 @@ impl Walking {
         _ => (None, None)
       };
 
-      new_motions = match motion {
-        Some(m) => new_motions.set(&entity, m),
-        None => new_motions.remove(&entity)
+      new_transforms = match transform {
+        Some(t) => new_transforms.set(&entity, t),
+        None => new_transforms
       };
 
       new_walkers = match walk {
@@ -47,16 +45,21 @@ impl Walking {
       };
     }
 
-    (new_walkers, new_motions)
+    (new_walkers, new_transforms)
   }
 }
 
-fn generate_motion(w: &Walk, t: &Transform) -> Motion {
-  let rem_steps = w.speed - w.step;
-  let dist_x = w.dest_x - t.x;
-  let dist_y = w.dest_y - t.y;
-
-  let velo_x = dist_x / (rem_steps as f32 / 1000.0);
-  let velo_y = dist_y / (rem_steps as f32 / 1000.0);
-  Motion{velo_x, velo_y}
+fn generate_transform(ticks: u32, w: &Walk, t: &Transform) -> Transform {
+  let rem_dist_x = w.dest_x - t.x;
+  let rem_dist_y = w.dest_y - t.y;
+  let rem_steps = w.transition_time - w.step;
+  let dist_x_per_step = rem_dist_x / rem_steps as f64;
+  let dist_y_per_step = rem_dist_y / rem_steps as f64;
+  let current_travel_x = dist_x_per_step * ticks as f64;
+  let current_travel_y = dist_y_per_step * ticks as f64;
+  Transform {
+    x: t.x + current_travel_x,
+    y: t.y + current_travel_y,
+    .. *t
+  }
 }

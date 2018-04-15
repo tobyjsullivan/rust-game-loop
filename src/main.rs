@@ -20,18 +20,14 @@ mod map;
 use entity::EntityProducer;
 use component::{
     ComponentManager,
-    Motion,
     Sprite,
     Transform,
-    Follow,
     Camera,
     Joystick,
     Walk
 };
 use system::{
     Render,
-    Movement,
-    Tracking,
     Controller,
     Walking
 };
@@ -42,17 +38,15 @@ const SCREEN_HEIGHT: u32 = 640;
 const SCREEN_WIDTH: u32 = 1200;
 const WORLD_WIDTH: i32 = 20;
 const WORLD_HEIGHT: i32 = 20;
-const START_X: f32 = 1.0;
-const START_Y: f32 = 1.0;
-const PLAYER_SPEED: f32 = 4.0;
+const START_X: f64 = 1.0;
+const START_Y: f64 = 1.0;
+const PLAYER_SPEED: f64 = 4.0;
 
 fn main() {
     let sdl_ctx = sdl2::init().unwrap();
     let mut events = sdl_ctx.event_pump().unwrap();
 
-    let mut render = Render::new(&sdl_ctx, SCREEN_WIDTH, SCREEN_HEIGHT, WORLD_WIDTH as f32, WORLD_HEIGHT as f32);
-    let movement = Movement::new();
-    let tracking = Tracking::new();
+    let mut render = Render::new(&sdl_ctx, SCREEN_WIDTH, SCREEN_HEIGHT, WORLD_WIDTH as f64, WORLD_HEIGHT as f64);
     let controller = Controller::new(PLAYER_SPEED);
     let walking = Walking::new();
 
@@ -60,8 +54,6 @@ fn main() {
 
     let mut sprites: ComponentManager<Sprite> = ComponentManager::new();
     let mut transforms: ComponentManager<Transform> = ComponentManager::new();
-    let mut motions: ComponentManager<Motion> = ComponentManager::new();
-    let mut followers: ComponentManager<Follow> = ComponentManager::new();
     let mut cameras: ComponentManager<Camera> = ComponentManager::new();
     let mut joysticks: ComponentManager<Joystick> = ComponentManager::new();
     let mut walkers: ComponentManager<Walk> = ComponentManager::new();
@@ -77,12 +69,8 @@ fn main() {
     sprites = sprites.set(&player, Sprite{color: Color::RGB(255, 0, 0), fill: true, z_index: 1});
     transforms = transforms.set(&player, Transform{x: START_X, y: START_Y});
     joysticks = joysticks.set(&player, Joystick{});
-
-    let camera1 = producer.create();
-    transforms = transforms.set(&camera1, Transform{x: START_X, y: START_Y});
-    motions = motions.set(&camera1, Motion{velo_x: 0.0, velo_y: 0.0});
-    followers = followers.set(&camera1, Follow{target: player.clone(), speed: 100.0});
-    cameras = cameras.set(&camera1, Camera{view_width: 10.0, view_height: 10.0});
+    // Since we want to make the camera follow the player, we just make the player the camera. *brain explodes*
+    cameras = cameras.set(&player, Camera{view_width: 10.0, view_height: 10.0});
 
     let mut frame_count = 0;
     let mut last_tick = Instant::now();
@@ -90,7 +78,6 @@ fn main() {
     'main: loop {
         let ticks = last_tick.elapsed().subsec_millis();
         last_tick = Instant::now();
-        println!("Ticks elapsed: {}", ticks);
 
         for event in events.poll_iter() {
             match event {
@@ -102,14 +89,12 @@ fn main() {
         }
 
         walkers = controller.apply(ticks, &controls, &joysticks, walkers, &transforms);
-        match walking.apply(ticks, walkers, motions, &transforms) {
-            (w, m) => {
+        match walking.apply(ticks, walkers, transforms) {
+            (w, t) => {
                 walkers = w;
-                motions = m;
+                transforms = t;
             }
         }
-        motions = tracking.apply(ticks, &followers, &transforms, motions);
-        transforms = movement.apply(ticks, transforms, &motions);
 
         render.render(ticks, &cameras, &sprites, &transforms);
 
@@ -120,7 +105,7 @@ fn main() {
     }
 }
 
-fn create_land_tile(x: f32, y: f32, tile: &Tile, producer: &mut EntityProducer, sprites: ComponentManager<Sprite>, transforms: ComponentManager<Transform>) -> (ComponentManager<Sprite>, ComponentManager<Transform>) {
+fn create_land_tile(x: f64, y: f64, tile: &Tile, producer: &mut EntityProducer, sprites: ComponentManager<Sprite>, transforms: ComponentManager<Transform>) -> (ComponentManager<Sprite>, ComponentManager<Transform>) {
     let entity = producer.create();
     (
         sprites.set(&entity, Sprite{color: Tile::color(tile), fill: true, z_index: 0}),
@@ -135,7 +120,7 @@ fn init_land_tiles(producer: &mut EntityProducer, sprites: ComponentManager<Spri
     for x in 0..WORLD_WIDTH {
         for y in 0..WORLD_HEIGHT {
             let next_tile = next_tile(&prev_tile);
-            match create_land_tile(x as f32, y as f32, &next_tile, producer, new_sprites, new_transforms) {
+            match create_land_tile(x as f64, y as f64, &next_tile, producer, new_sprites, new_transforms) {
                 (s, t) => {
                     new_sprites = s;
                     new_transforms = t

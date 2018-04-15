@@ -21,12 +21,12 @@ pub struct Render {
     canvas: Canvas<Window>,
     screen_width: u32,
     screen_height: u32,
-    world_width: f32,
-    world_height: f32
+    world_width: f64,
+    world_height: f64
 }
 
 impl Render {
-    pub fn new(sdl_ctx: &sdl2::Sdl, screen_width: u32, screen_height: u32, world_width: f32, world_height: f32) -> Self {
+    pub fn new(sdl_ctx: &sdl2::Sdl, screen_width: u32, screen_height: u32, world_width: f64, world_height: f64) -> Self {
         let video_subsystem = sdl_ctx.video().unwrap();
         let window = video_subsystem
             .window("game window", screen_width, screen_height)
@@ -65,7 +65,6 @@ impl Render {
             let entity = arc_entity.deref().clone();
             match (cameras.get(&entity), transforms.get(&entity)) {
                 (Some(c), Some(t)) => {
-                    println!("Camera: x: {}, y: {}, width: {}, height: {}.", t.x, t.y, c.view_width, c.view_height);
                     let camera_left = t.x - (c.view_width / 2.0);
                     let camera_right = t.x + (c.view_width / 2.0) + 1.0;
                     let camera_top = t.y - (c.view_height / 2.0);
@@ -110,11 +109,9 @@ impl Render {
 
         let scene_width = scene_right - scene_left;
         let scene_height = scene_bottom - scene_top;
-        let min = |a: f32, b: f32| if a < b { a } else { b };
-        let max = |a: f32, b: f32| if a > b { a } else { b };
-        let scene_scale: f32 = min(self.screen_width as f32 / scene_width, self.screen_height as f32 / scene_height);
-
-        println!("Scene scale: {}; left: {}; right: {}; top: {}; bottom: {}", scene_scale, scene_left, scene_right, scene_top, scene_bottom);
+        let min = |a: f64, b: f64| if a < b { a } else { b };
+        let max = |a: f64, b: f64| if a > b { a } else { b };
+        let scene_scale: f64 = min(self.screen_width as f64 / scene_width, self.screen_height as f64 / scene_height);
 
         clear_canvas(&mut self.canvas);
 

@@ -9,11 +9,11 @@ use std::ops::Deref;
 use im::HashSet;
 
 pub struct Controller {
-  player_speed: f32
+  player_speed: f64
 }
 
 impl Controller {
-  pub fn new(player_speed: f32) -> Self {
+  pub fn new(player_speed: f64) -> Self {
     Controller{ player_speed }
   }
 
@@ -65,12 +65,12 @@ fn is_directional_control(c: &Control) -> bool {
   }
 }
 
-fn generate_walk(c: &Control, player_speed: f32, t: &Transform) -> Walk {
+fn generate_walk(c: &Control, player_speed: f64, t: &Transform) -> Walk {
   let (dest_x, dest_y) = match c {
     Control::MoveUp => (t.x, t.y - 1.0),
     Control::MoveDown => (t.x, t.y + 1.0),
     Control::MoveLeft => (t.x - 1.0, t.y),
     Control::MoveRight => (t.x + 1.0, t.y)
   };
-  Walk{speed: (1000.0 / player_speed) as i32, step: 0, dest_x, dest_y}
+  Walk{transition_time: (1000.0 / player_speed) as i32, step: 0, dest_x: dest_x.round(), dest_y: dest_y.round()}
 }
