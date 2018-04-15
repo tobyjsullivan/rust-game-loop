@@ -24,12 +24,13 @@ use component::{
     Transform,
     Camera,
     Joystick,
-    Walk
+    TransitionalMotion,
+    Collidable
 };
 use system::{
     Render,
     Controller,
-    Walking
+    Movement
 };
 use control::Control;
 use map::Tile;
@@ -41,14 +42,15 @@ const WORLD_HEIGHT: i32 = 20;
 const START_X: f64 = 1.0;
 const START_Y: f64 = 1.0;
 const PLAYER_SPEED: f64 = 8.0;
+const FULLSCREEN: bool = false;
 
 fn main() {
     let sdl_ctx = sdl2::init().unwrap();
     let mut events = sdl_ctx.event_pump().unwrap();
 
-    let mut render = Render::new(&sdl_ctx, SCREEN_WIDTH, SCREEN_HEIGHT, WORLD_WIDTH as f64, WORLD_HEIGHT as f64);
+    let mut render = Render::new(&sdl_ctx, SCREEN_WIDTH, SCREEN_HEIGHT, WORLD_WIDTH as f64, WORLD_HEIGHT as f64, FULLSCREEN);
     let controller = Controller::new(PLAYER_SPEED);
-    let walking = Walking::new();
+    let movement = Movement::new();
 
     let mut producer = EntityProducer::new();
 
@@ -56,12 +58,14 @@ fn main() {
     let mut transforms: ComponentManager<Transform> = ComponentManager::new();
     let mut cameras: ComponentManager<Camera> = ComponentManager::new();
     let mut joysticks: ComponentManager<Joystick> = ComponentManager::new();
-    let mut walkers: ComponentManager<Walk> = ComponentManager::new();
+    let mut motions: ComponentManager<TransitionalMotion> = ComponentManager::new();
+    let mut collidables: ComponentManager<Collidable> = ComponentManager::new();
 
-    match init_land_tiles(&mut producer, sprites, transforms) {
-        (s, t) => {
+    match init_land_tiles(&mut producer, sprites, transforms, collidables) {
+        (s, t, c) => {
             sprites = s;
             transforms = t;
+            collidables = c;
         }
     }
 
@@ -88,10 +92,10 @@ fn main() {
             controls = Control::mutate_controls(controls, event);
         }
 
-        walkers = controller.apply(ticks, &controls, &joysticks, walkers, &transforms);
-        match walking.apply(ticks, walkers, transforms) {
-            (w, t) => {
-                walkers = w;
+        motions = controller.apply(ticks, &controls, &joysticks, motions, &transforms, &collidables);
+        match movement.apply(ticks, motions, transforms) {
+            (m, t) => {
+                motions = m;
                 transforms = t;
             }
         }
@@ -105,32 +109,54 @@ fn main() {
     }
 }
 
-fn create_land_tile(x: f64, y: f64, tile: &Tile, producer: &mut EntityProducer, sprites: ComponentManager<Sprite>, transforms: ComponentManager<Transform>) -> (ComponentManager<Sprite>, ComponentManager<Transform>) {
+fn create_land_tile(
+    x: f64,
+    y: f64,
+    tile: &Tile,
+    producer: &mut EntityProducer,
+    sprites: ComponentManager<Sprite>,
+    transforms: ComponentManager<Transform>,
+    collidables: ComponentManager<Collidable>
+    ) -> (ComponentManager<Sprite>, ComponentManager<Transform>, ComponentManager<Collidable>) {
     let entity = producer.create();
+    let new_collidables = if tile.obstruction() {
+        collidables.set(&entity, Collidable{obstruction: true})
+    } else {
+        collidables
+    };
     (
         sprites.set(&entity, Sprite{color: Tile::color(tile), fill: true, z_index: 0}),
-        transforms.set(&entity, Transform{ x, y })
+        transforms.set(&entity, Transform{ x, y }),
+        new_collidables
     )
 }
 
-fn init_land_tiles(producer: &mut EntityProducer, sprites: ComponentManager<Sprite>, transforms: ComponentManager<Transform>) -> (ComponentManager<Sprite>, ComponentManager<Transform>) {
+fn init_land_tiles(
+    producer: &mut EntityProducer,
+    sprites: ComponentManager<Sprite>,
+    transforms: ComponentManager<Transform>,
+    collidables: ComponentManager<Collidable>
+    ) -> (ComponentManager<Sprite>, ComponentManager<Transform>, ComponentManager<Collidable>) {
     let mut new_sprites = sprites;
     let mut new_transforms = transforms;
+    let mut new_collidables = collidables;
     let mut prev_tile: Tile = Tile::Grass;
     for x in 0..WORLD_WIDTH {
         for y in 0..WORLD_HEIGHT {
             let next_tile = next_tile(&prev_tile);
-            match create_land_tile(x as f64, y as f64, &next_tile, producer, new_sprites, new_transforms) {
-                (s, t) => {
+            match create_land_tile(x as f64, y as f64, &next_tile, producer,
+                new_sprites, new_transforms, new_collidables) {
+                (s, t, c) => {
                     new_sprites = s;
-                    new_transforms = t
+                    new_transforms = t;
+                    new_collidables = c;
                 }
             }
             prev_tile = next_tile;
         }
     }
 
-    (new_sprites, new_transforms)
+    (new_sprites, new_transforms, new_collidables)
 }
 
 fn next_tile(prev: &Tile) -> Tile {

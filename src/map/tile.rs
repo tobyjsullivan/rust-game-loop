@@ -12,4 +12,11 @@ impl Tile {
       Tile::Water => Color::RGB(0, 0, 255)
     }
   }
+
+  pub fn obstruction(&self) -> bool {
+    match self {
+      Tile::Water => true,
+      _ => false
+    }
+  }
 }

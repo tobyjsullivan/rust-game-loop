@@ -1,7 +1,7 @@
 mod render;
 mod controller;
-mod walking;
+mod movement;
 
 pub use self::render::Render;
 pub use self::controller::Controller;
-pub use self::walking::Walking;
+pub use self::movement::Movement;
