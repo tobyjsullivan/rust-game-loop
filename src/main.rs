@@ -25,13 +25,15 @@ use component::{
     Transform,
     Follow,
     Camera,
-    Joystick
+    Joystick,
+    Walk
 };
 use system::{
     Render,
     Movement,
     Tracking,
-    Controller
+    Controller,
+    Walking
 };
 use control::Control;
 use map::Tile;
@@ -52,6 +54,7 @@ fn main() {
     let movement = Movement::new();
     let tracking = Tracking::new();
     let controller = Controller::new(PLAYER_SPEED);
+    let walking = Walking::new();
 
     let mut producer = EntityProducer::new();
 
@@ -61,6 +64,7 @@ fn main() {
     let mut followers: ComponentManager<Follow> = ComponentManager::new();
     let mut cameras: ComponentManager<Camera> = ComponentManager::new();
     let mut joysticks: ComponentManager<Joystick> = ComponentManager::new();
+    let mut walkers: ComponentManager<Walk> = ComponentManager::new();
 
     match init_land_tiles(&mut producer, sprites, transforms) {
         (s, t) => {
@@ -72,7 +76,6 @@ fn main() {
     let player = producer.create();
     sprites = sprites.set(&player, Sprite{color: Color::RGB(255, 0, 0), fill: true, z_index: 1});
     transforms = transforms.set(&player, Transform{x: START_X, y: START_Y});
-    motions = motions.set(&player, Motion{velo_x: 1.0, velo_y: 1.0});
     joysticks = joysticks.set(&player, Joystick{});
 
     let camera1 = producer.create();
@@ -98,7 +101,13 @@ fn main() {
             controls = Control::mutate_controls(controls, event);
         }
 
-        motions = controller.apply(ticks, &controls, &joysticks, motions);
+        walkers = controller.apply(ticks, &controls, &joysticks, walkers, &transforms);
+        match walking.apply(ticks, walkers, motions, &transforms) {
+            (w, m) => {
+                walkers = w;
+                motions = m;
+            }
+        }
         motions = tracking.apply(ticks, &followers, &transforms, motions);
         transforms = movement.apply(ticks, transforms, &motions);
 

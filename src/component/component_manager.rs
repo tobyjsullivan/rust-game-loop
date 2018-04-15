@@ -30,6 +30,13 @@ impl<T> ComponentManager<T> {
       entities: Vec::from_iter(self.entities.keys())
     }
   }
+
+  pub fn remove(&self, e: &Entity) -> Self {
+    ComponentManager {
+      entities: self.entities.remove(e),
+      .. *self
+    }
+  }
 }
 
 pub struct KeyIterator {
